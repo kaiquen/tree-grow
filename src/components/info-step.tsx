@@ -5,12 +5,14 @@ type ParamsType = {
   icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>, 
   text: string, 
   description: string
+  iconColor?: string
+  bgIconColor?: string
 }
 
-export const InfoStep: React.FC<ParamsType> = ({icon: Icon, text, description}) => (
+export const InfoStep: React.FC<ParamsType> = ({icon: Icon,iconColor, bgIconColor, text, description}) => (
   <div className="flex items-center space-x-4 bg-white p-4 rounded-lg shadow-sm">
-    <div className="bg-green-100 p-2 rounded-full">
-      <Icon className="h-6 w-6 text-green-600"/>
+    <div className={`${bgIconColor} p-2 rounded-full`}>
+      <Icon className={`h-6 w-6 ${iconColor}`}/>
     </div>
     <div>
       <h3 className="font-semibold text-gray-800">{text}</h3>
