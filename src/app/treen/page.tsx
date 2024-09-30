@@ -1,10 +1,12 @@
-"use client"
 
 import GrowingTree from "@/components/growing-tree";
+import { ProtectedRoute } from "@/components/protected-route";
 
 
-export default function Page () {
+export default function Page() {
   return (
-    <GrowingTree/>  
+    <ProtectedRoute>
+      <GrowingTree />
+    </ProtectedRoute>
   );
 }
