@@ -1,45 +1,49 @@
 "use client";
 
-import React, { useState } from "react";
-import { motion } from "framer-motion";
-
-// const stages = [
-//   "images/sprout.png",    // estágio 1: broto
-//   "images/youngTree.png", // estágio 2: árvore jovem
-//   "images/tree.png",      // estágio 3: árvore completa
-// ];
+import React, {   useState } from "react";
+import  {useRive, useStateMachineInput} from "@rive-app/react-canvas";
 
 const GrowingTree = () => {
-  const [growthStage, setGrowthStage] = useState(0);
+  const [clickCount, setClickCount] = useState<number>(0);
 
-  // const waterPlant = () => {
-  //   setGrowthStage((prevStage) => (prevStage < stages.length - 1 ? prevStage + 1 : prevStage));
-  // };
+  const {RiveComponent, rive} = useRive({
+    src:"/animations/pomodoro_tree.riv",
+    stateMachines: "State Machine 1",
+    autoplay: true, 
+  })
+
+  const growthInput = useStateMachineInput(rive, "State Machine 1", "input", clickCount)
+
+  const handleRiveClick = () => {
+      setClickCount((prev) => prev + 1);
+
+      if (growthInput) {
+        const newValue = Math.min((growthInput.value as number) * 2, 100);
+        growthInput.value = newValue;
+      }
+  };
 
   return (
-    <div style={{ textAlign: "center" }}>
-      <h1>Cuide do seu Broto</h1>
-
-      <motion.div
-        key={growthStage}
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-        style={{ display: "inline-block" }}
+    <div className="flex items-center justify-center  flex-col max-h-screen p-4">
+      <h1 className="text-4xl font-bold text-green-800 flex items-center justify-center gap-2 mb-2">
+        Cuide do seu Broto
+      </h1>
+      <div
+        className="select-none relative w-screen h-screen"
+     
       >
-        {/* <Image
-          src={stages[growthStage]}
-          width={100}
-          height={100}
-          alt="Estágio de Crescimento"
-          style={{ width: "200px", height: "auto" }}
-        /> */}
-      </motion.div>
+        <RiveComponent
+          onClick={handleRiveClick}
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "block",
+            objectFit: "contain",
+            cursor: "pointer"
+          }}
+        />
+      </div>
 
-      <br />
-      <button style={{ marginTop: "20px" }}>
-        Regar
-      </button>
     </div>
   );
 }

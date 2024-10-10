@@ -17,7 +17,7 @@ export default function Page() {
 
   useEffect(() => {
     if (account.length > 0) {
-      router.replace("/treen");
+      router.replace("/tree");
     }
   }, [account, router]);
 

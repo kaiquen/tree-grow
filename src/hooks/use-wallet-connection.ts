@@ -15,6 +15,7 @@ export const useWalletConnection = () => {
       setAccount(null);
       setIsConnected(false);
     }
+
     setLoading(false);
   };
 

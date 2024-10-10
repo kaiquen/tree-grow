@@ -11,7 +11,9 @@ type PropsType = {
 
 export const ProtectedRoute: React.FC<PropsType> = ({ children }) => {
   const { account, loading } = useWallet();
+
   const router = useRouter();
+
   const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
@@ -19,6 +21,7 @@ export const ProtectedRoute: React.FC<PropsType> = ({ children }) => {
   }, []);
 
   useEffect(() => {
+    console.log("account:", account);
     if (account.length === 0) {
       router.replace("/");
     }
