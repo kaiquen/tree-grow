@@ -2,37 +2,65 @@
 "use client"
 
 import { MetamaskRequirementDialog } from "@/components/metamask-requirement-dialog";
-import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useEffect, useState } from "react";
+import { createContext, Dispatch, ReactNode, SetStateAction, useCallback, useContext, useEffect, useState } from "react";
 import {useRouter} from "next/navigation";
 
-interface IWalletContext {
-  account: string[];
+type UserData = {
+  walletAddress: string;
+  level: number;
+  treeProgress: number;
+}
+
+type WalletContextProps = {
   loading: boolean;
   connectWallet: () => Promise<void>;
   isModalOpen: boolean;
   setIsModalOpen: Dispatch<SetStateAction<boolean>>
+  userData: UserData | null;
+  setUserData: Dispatch<SetStateAction<UserData | null>>
 }
 
-const WalletContext = createContext({} as IWalletContext);
+const WalletContext = createContext<WalletContextProps | undefined>(undefined);
 
 export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [account, setAccount] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [userData, setUserData] = useState<UserData | null>(null);
+  
   const router = useRouter();
 
-  const handleAccountsChanged = (accounts: unknown) => {
+  const loadOrCreateUser = useCallback(async (walletAddress: string) => {
+    try {
+      const res = await fetch("/api/users", {
+        method:"POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({walletAddress})
+      });
+
+      const data = await res.json();
+
+      setUserData(data);
+    } catch (error) {
+      console.error("Erro ao carregar ou criar usuário:", error);
+    }
+  }, [setUserData]);
+
+  const handleAccountsChanged = useCallback((accounts: unknown) => {
     if (Array.isArray(accounts) && accounts.length > 0) {
-      setAccount(accounts);
+      const [firstAccount] = accounts;
+
       localStorage.setItem("walletAccount", JSON.stringify(accounts));
+      loadOrCreateUser(firstAccount);
     } else {
-      setAccount([]);
+      setUserData(null);
       localStorage.removeItem("walletAccount");
-      router.replace("/");
+      router.replace("/auth");
     }
 
     setLoading(false);
-  };
+  }, [loadOrCreateUser, setUserData, router]);
 
   const connectWallet = async () => {
     setLoading(true);
@@ -73,16 +101,17 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     } else {
       setLoading(false)
     }
-  }, []);
+  }, [handleAccountsChanged]);
 
   return (
     <WalletContext.Provider
       value={{
-        account,
         loading,
         connectWallet,
         isModalOpen,
         setIsModalOpen,
+        userData,
+        setUserData
       }}
     >
       {children}
@@ -92,4 +121,12 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   );
 };
 
-export const useWallet = () => useContext(WalletContext);
+export const useWallet = () => {
+  const context = useContext(WalletContext);
+ 
+  if (!context) {
+    throw new Error("useWallet must be used within a WalletProvider");
+  }
+
+  return context;
+};

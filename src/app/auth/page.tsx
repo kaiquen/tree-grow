@@ -11,15 +11,15 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function Page() {
-  const { account, loading, connectWallet } = useWallet();
+  const { userData, loading, connectWallet } = useWallet();
 
   const router = useRouter();
 
   useEffect(() => {
-    if (account.length > 0) {
-      router.replace("/tree");
+    if (userData) {
+      router.replace("/");
     }
-  }, [account, router]);
+  }, [userData, router]);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-green-50 to-green-100 flex flex-col items-center justify-center p-4">
@@ -37,7 +37,7 @@ export default function Page() {
           onClick={connectWallet}
           disabled={loading}
         >
-          {account.length === 0 && loading ? (
+          {!userData && loading ? (
             <Loading />
           ) : (
             <>
