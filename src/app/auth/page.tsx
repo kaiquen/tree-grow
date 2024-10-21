@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import { InfoStep } from "@/components/info-step";
@@ -11,18 +10,24 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function Page() {
-  const { userData, loading, connectWallet } = useWallet();
+  const { user, isLoading, connectWallet, error } = useWallet();
 
   const router = useRouter();
 
   useEffect(() => {
-    if (userData) {
+    console.log("AuthPage: userData mudou:", user);
+
+    if (user) {
+      console.log("AuthPage: Redirecionando para a página inicial.");
+
       router.replace("/");
     }
-  }, [userData, router]);
+  }, [user, router]);
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-green-50 to-green-100 flex flex-col items-center justify-center p-4">
+    <main className="min-h-screen bg-gradient-to-b from-green-50 to-green-100 z-10 flex flex-col items-center justify-center p-4 relative">
+      <div className="absolute inset-0 bg-center opacity-10 bg-tree -z-10"/>
+
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold text-green-800 flex items-center justify-center gap-2 mb-2">
           <Trees className="h-10 w-10" />
@@ -35,9 +40,9 @@ export default function Page() {
         <Button
           className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2 text-lg py-6"
           onClick={connectWallet}
-          disabled={loading}
+          disabled={isLoading}
         >
-          {!userData && loading ? (
+          {!user && isLoading ? (
             <Loading />
           ) : (
             <>
@@ -46,6 +51,7 @@ export default function Page() {
             </>
           )}
         </Button>
+        {error && <p className="text-red-500 mt-2 text-center">{error}</p>}
       </div>
 
       <div className="w-full max-w-md space-y-4 mb-8">

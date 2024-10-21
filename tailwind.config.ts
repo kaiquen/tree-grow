@@ -79,7 +79,7 @@ const config: Config = {
         "accordion-up": "accordion-up 0.2s ease-out",
       },
       backgroundImage: {
-        tree: "url('/image/bg-img.jpg')",
+        tree: "url('/images/background.jpg')",
       },
     },
   },

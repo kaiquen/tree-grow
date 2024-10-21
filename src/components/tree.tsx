@@ -1,16 +1,14 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import  {useRive, useStateMachineInput} from "@rive-app/react-canvas";
 
 type TreeProps = {
-  onComplete: () => void;
-  resetSignal: boolean;
-  onProgressChange: (progress: number) => void;
   initialProgress: number;
+  onProgressChange: () => void;
 }
 
-export const Tree = ({onComplete,onProgressChange,resetSignal, initialProgress}:TreeProps) => {
+export const Tree = ({onProgressChange,  initialProgress}:TreeProps) => {
   const STATE_MACHINE_NAME = "State Machine 1";
   const INPUT_NAME = "input";
 
@@ -26,42 +24,15 @@ export const Tree = ({onComplete,onProgressChange,resetSignal, initialProgress}:
     INPUT_NAME
   );
 
-  const onProgressChangeRef = useRef(onProgressChange);
-  
-  useEffect(() => {
-    onProgressChangeRef.current = onProgressChange;
-  }, [onProgressChange]);
-
-
   useEffect(() => {
     if(growthInput) {
       growthInput.value = initialProgress;
     }
   }, [growthInput, initialProgress]);
 
-  useEffect(() => {
-    if(growthInput && resetSignal) {
-      growthInput.value = 0;
-      onProgressChange(0);
-    }
-  }, [resetSignal, growthInput]);
-
-  const handleRiveClick = () => {
-    if (growthInput) {
-      const newValue = Math.min((growthInput.value as number) + 1, 100);
-      growthInput.value = newValue;
-
-      onProgressChange(newValue);
-
-      if(newValue >= 100) {
-        onComplete();
-      }
-    }
-  };
-
   return (
     <RiveComponent
-      onClick={handleRiveClick}
+      onClick={onProgressChange}
       style={{
         userSelect: "none",
         width: "100%",

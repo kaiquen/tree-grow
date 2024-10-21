@@ -1,117 +1,72 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import { MetamaskRequirementDialog } from "@/components/metamask-requirement-dialog";
-import { createContext, Dispatch, ReactNode, SetStateAction, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, Dispatch, ReactNode, SetStateAction,  useContext, useEffect, useState } from "react";
 import {useRouter} from "next/navigation";
-
-type UserData = {
-  walletAddress: string;
-  level: number;
-  treeProgress: number;
-}
+import { authenticateUser } from "@/actions/auth-actions";
+import { User } from "@/types/user";
+import { useMetaMask } from "@/hooks/use-meta-mask";
 
 type WalletContextProps = {
-  loading: boolean;
-  connectWallet: () => Promise<void>;
+  user: User | null;
+  setUser: Dispatch<SetStateAction<User | null>>
+
   isModalOpen: boolean;
   setIsModalOpen: Dispatch<SetStateAction<boolean>>
-  userData: UserData | null;
-  setUserData: Dispatch<SetStateAction<UserData | null>>
+
+  connectWallet: () => Promise<void>
+  isLoading: boolean;
+  error: string | null;
 }
 
 const WalletContext = createContext<WalletContextProps | undefined>(undefined);
 
 export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [userData, setUserData] = useState<UserData | null>(null);
+  const { account, isLoading, error, connectWallet } = useMetaMask();
+
+  const [user, setUser] = useState<User | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   
   const router = useRouter();
 
-  const loadOrCreateUser = useCallback(async (walletAddress: string) => {
-    try {
-      const res = await fetch("/api/users", {
-        method:"POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({walletAddress})
-      });
-
-      const data = await res.json();
-
-      setUserData(data);
-    } catch (error) {
-      console.error("Erro ao carregar ou criar usuário:", error);
-    }
-  }, [setUserData]);
-
-  const handleAccountsChanged = useCallback((accounts: unknown) => {
-    if (Array.isArray(accounts) && accounts.length > 0) {
-      const [firstAccount] = accounts;
-
-      localStorage.setItem("walletAccount", JSON.stringify(accounts));
-      loadOrCreateUser(firstAccount);
-    } else {
-      setUserData(null);
-      localStorage.removeItem("walletAccount");
-      router.replace("/auth");
-    }
-
-    setLoading(false);
-  }, [loadOrCreateUser, setUserData, router]);
-
-  const connectWallet = async () => {
-    setLoading(true);
-
-    const { ethereum } = window;
-
-    if (!ethereum) {
-      setIsModalOpen(true);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const accounts = await ethereum.request({ method: "eth_requestAccounts" });
-      handleAccountsChanged(accounts);
-    } catch (error: any) {
-      if (error.code !== -32002) {
-        console.error("Erro ao conectar:", error);
-      }
-    } finally {
-      setLoading(false)
-    }
-  };
-
   useEffect(() => {
-    const {ethereum} = window;
+    const loadUser = async () => {
+      if(account) {
+        try {
+          console.log("Conta detectada no contexto:", account);
 
-    if(ethereum) {
-      ethereum.request({method:"eth_accounts"}).then(handleAccountsChanged);
+          const user = await authenticateUser(account);
+          
+          console.log("Usuário autenticado:", user);
 
-      ethereum.on("accountsChanged", handleAccountsChanged);
-      ethereum.on("chainChanged", () => window.location.reload());
+          
+          setUser(user);
+          localStorage.setItem("walletAccount", JSON.stringify(account));
+        } catch (error) {
+          console.error("Erro ao autenticar usuário:", error);
+        }
+      } else {
+        console.log("Nenhuma conta conectada. Redirecionando para /auth.");
 
-      return () => {
-        window.ethereum?.removeListener("accountsChanged", handleAccountsChanged);
-        window.ethereum?.removeListener("chainChanged", () => window.location.reload());
-      };
-    } else {
-      setLoading(false)
+        setUser(null);
+        localStorage.removeItem("walletAccount");
+        router.replace("/auth");
+      }
     }
-  }, [handleAccountsChanged]);
+
+    loadUser();
+  }, [account, router]);
 
   return (
     <WalletContext.Provider
       value={{
-        loading,
-        connectWallet,
         isModalOpen,
         setIsModalOpen,
-        userData,
-        setUserData
+        user,
+        setUser,
+        connectWallet,
+        isLoading,
+        error
       }}
     >
       {children}
