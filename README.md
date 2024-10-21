@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TreeGrow 🌳
 
-## Getting Started
+**TreeGrow** é um jogo que utiliza a **MetaMask** e a **Blockchain** para permitir que os jogadores cultivem árvores virtuais. A cada vez que você rega sua árvore, ela cresce, você progride de nível e ganha pontos. Esses pontos podem ser trocados por **Ethereum (ETH)** diretamente em sua carteira digital.
 
-First, run the development server:
+## Funcionalidades Principais
+
+- **Interação com MetaMask**: O jogador precisa conectar sua carteira digital MetaMask para participar do jogo.
+- **Crescimento da Árvore**: Cada ação de regar a árvore contribui para o seu crescimento e para a progressão nos níveis.
+- **Sistema de Recompensas**: Conforme a árvore cresce e os níveis aumentam, o jogador acumula pontos que podem ser trocados por ETH.
+- **Transações na Blockchain**: Todas as interações de recompensas e troca de pontos por ETH são registradas diretamente na blockchain, garantindo transparência e segurança.
+
+## Tecnologias Utilizadas
+
+- **Next.js** - Framework utilizado para o desenvolvimento da interface do usuário.
+- **React** - Biblioteca JavaScript para construção de interfaces.
+- **MetaMask** - Integração com carteira digital para autenticação e transações.
+- **Ethers** - Biblioteca utilizada para gerenciar as transações do jogo.
+- **Tailwind CSS** - Framework CSS para estilização rápida e eficiente da interface.
+- **Shadcn UI** - Biblioteca de componentes de interface para construção rápida e moderna de elementos UI.
+
+## Como Executar o Projeto
+
+Rode o servidor de desenvolvimento:
 
 ```bash
 npm run dev
-# or
+# ou
 yarn dev
-# or
+# ou
 pnpm dev
-# or
+# ou
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abra [http://localhost:3000](http://localhost:3000) com o seu navegador.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Certifique-se de que a **MetaMask** está instalada e conectada à rede correta (Ethereum testnet/mainnet).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Deploy
 
-## Learn More
+A aplicação pode ser facilmente deployada na plataforma [Vercel](https://vercel.com/) ou em qualquer outro provedor de hosting. Certifique-se de configurar as chaves da API para conexão com a MetaMask e a blockchain corretamente antes de realizar o deploy.
 
-To learn more about Next.js, take a look at the following resources:
+## Licença
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Este projeto está licenciado sob a licença MIT. Veja o arquivo [LICENSE](./LICENSE) para mais detalhes.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
