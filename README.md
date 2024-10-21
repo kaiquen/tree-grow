@@ -34,7 +34,7 @@ bun dev
 
 Abra [http://localhost:3000](http://localhost:3000) com o seu navegador.
 
-Certifique-se de que a **MetaMask** está instalada e conectada à rede correta (Ethereum testnet/mainnet).
+Certifique-se de que a **MetaMask** está instalada e conectada à rede correta.
 
 ## Deploy
 
