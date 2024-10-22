@@ -17,9 +17,9 @@ model Users {
   id            String             @id @default(uuid())
   walletAddress String             @unique
   level         Int                @default(1)
-  treeProgress  Int                @default(0)
+  treeProgress  Float              @default(0.0)
+  coins         Float              @default(0.0)
   lastWateredAt DateTime?
-  coins         Int                @default(0)
   achievements  UserAchievements[] @relation("UserAchievements")
   withdrawals   Withdrawals[]
 }

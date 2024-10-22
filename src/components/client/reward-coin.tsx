@@ -7,34 +7,40 @@ import { useState } from "react"
 import { useWallet } from "@/contexts/wallet-context"
 import { withdrawCoins } from "@/actions/user-actions"
 
-type RewardCoinProps = {
-  coins: number;
-}
-export const RewardCoin = ({coins}:RewardCoinProps ) => {
+
+export const RewardCoin = () => {
   const [error, setError] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { user, setUser } = useWallet();
-  const minimumWithdrawal = 20
-  const conversionRate = 0.0001 // 1 coin = 0.0001 ETH
+    
+  const minimumWithdrawal = parseFloat(process.env.NEXT_PUBLIC_MINIMUM_WITHDRAWAL ?? "500");
+  const conversionRate = parseFloat(process.env.NEXT_PUBLIC_CONVERSION_RATE ?? "0.0001");
+
+  if(!user) return;
 
   const handleWithdraw = async () => {
-    if (coins < minimumWithdrawal) return;
+    if (user.coins < minimumWithdrawal) {
+      setError(`Saldo mínimo de ${minimumWithdrawal} coins necessário para retirada.`);
+      return;
+    };
 
     setLoading(true);
     setError(null);
 
     try {
-      if(!user) return;
 
       const updatedUser = await withdrawCoins(user.id)
 
-     setUser(updatedUser);
-     setIsOpen(false)
+      setUser(updatedUser);
 
-    } catch (error: any) {
+      setIsOpen(false)
+    } catch (error: unknown) {
       console.error("Erro ao retirar coins:", error);
-      setError(error.message || "Erro ao retirar coins.");
+
+      if(error instanceof Error) {
+        setError(error.message || "Erro ao retirar coins.");
+      }
     } finally {
       setLoading(false);
     }
@@ -46,7 +52,7 @@ export const RewardCoin = ({coins}:RewardCoinProps ) => {
       <DialogTrigger asChild>
         <Button variant="ghost" className="rounded-full p-2 hover:text-yellow-500 hover:bg-yellow-500/10 text-yellow-500">
           <Coins className="h-6 w-6 " />
-          <span className="ml-2 font-bold">{coins}</span>
+          <span className="ml-2 font-bold">{user.coins.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 2 })}</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
@@ -60,7 +66,7 @@ export const RewardCoin = ({coins}:RewardCoinProps ) => {
           <div className="flex items-center gap-4">
             <Coins className="h-10 w-10 text-yellow-500" />
             <div>
-              <p className="text-lg font-semibold">{coins} Coins</p>
+              <p className="text-lg font-semibold">{user.coins.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Coins</p>
               <p className="text-sm text-muted-foreground">
                 Disponíveis para resgate
               </p>
@@ -71,10 +77,10 @@ export const RewardCoin = ({coins}:RewardCoinProps ) => {
             <ul className="list-disc list-inside text-sm">
               <li>Valor mínimo para resgate: {minimumWithdrawal} Coins</li>
               <li>
-                Taxa de conversão: 1 Coin = {conversionRate} ETH
+                Taxa de conversão: 1 Coin = {conversionRate.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 4 })} ETH
               </li>
               <li>
-                Valor em ETH: {(coins * conversionRate).toFixed(4)} ETH
+                Valor em ETH: {(user.coins * conversionRate).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 4 })} ETH
               </li>
             </ul>
           </div>
@@ -89,7 +95,7 @@ export const RewardCoin = ({coins}:RewardCoinProps ) => {
           <Button variant="outline" onClick={() => setIsOpen(false)}>
             Cancelar
           </Button>
-          <Button onClick={handleWithdraw} disabled={coins < minimumWithdrawal || loading} aria-disabled={coins < minimumWithdrawal || loading}>
+          <Button onClick={handleWithdraw} disabled={user.coins < minimumWithdrawal || loading} aria-disabled={user.coins < minimumWithdrawal || loading}>
             {loading ? "Processando..." : "Resgatar para MetaMask"}
           </Button>
         </DialogFooter>

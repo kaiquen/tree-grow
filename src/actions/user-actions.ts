@@ -5,7 +5,9 @@ import { prisma } from "@/lib/prisma";
 import { User } from "@/types/user";
 
 type AchievementContext = {
-  actionCount: number;
+  level: number;
+  progress: number;
+  withdrawals: number;
   consecutiveDays: number;
 };
 
@@ -23,7 +25,7 @@ const calculateConsecutiveDays = (lastWateredAt: Date | null): number => {
   }
 };
 
-const checkAdnGrantAchievements = async (
+const checkAndGrantAchievements = async (
   userId: string,
   context: AchievementContext
 ) => {
@@ -40,8 +42,22 @@ const checkAdnGrantAchievements = async (
 
     switch (achievement.conditionType) {
       case "ACTION_COUNT":
-        if (context.actionCount >= achievement.conditionValue) {
-          conditionMet = true;
+        if (achievement.code.includes("TREE")) {
+          if (context.level - 1 >= achievement.conditionValue) {
+            conditionMet = true;
+          }
+        }
+
+        if (achievement.code.includes("WATER")) {
+          if (context.progress >= achievement.conditionValue) {
+            conditionMet = true;
+          }
+        }
+
+        if (achievement.code.includes("WITHDRAW")) {
+          if (context.withdrawals >= achievement.conditionValue) {
+            conditionMet = true;
+          }
         }
         break;
       case "CONSECUTIVE_DAYS":
@@ -66,24 +82,45 @@ const checkAdnGrantAchievements = async (
 };
 
 export const updateTreeProgress = async (user: User): Promise<User> => {
-  const baseIncrement = 10;
-  const decrementPerLevel = 1;
+  const treeBaseIncrement = parseFloat(
+    process.env.TREE_BASE_INCREMENT ?? "10.0"
+  );
+  const treeDecrementPerLevel = parseFloat(
+    process.env.TREE_DECREMENTE_PER_LEVEL ?? "0.6"
+  );
 
-  let increment = baseIncrement - (user.level - 1) * decrementPerLevel;
+  const coinBaseIncrement = parseFloat(
+    process.env.COIN_BASE_INCREMENT ?? "1.0"
+  );
+  const coinBaseDecrementPerLevel = parseFloat(
+    process.env.COIN_BASE_DECREMENT_PER_LEVEL ?? "0.1"
+  );
+  const coinAdditionalPerLevel = parseFloat(
+    process.env.COIN_PER_LEVEL ?? "1.0"
+  );
+  const coinAdditionalPerLevelIncrease = parseFloat(
+    process.env.COIN_ADDITIONAL_PER_LEVEL_INCREASE ?? "0.2"
+  );
 
-  if (increment < 1) increment = 1;
+  let increment = treeBaseIncrement - (user.level - 1) * treeDecrementPerLevel;
+
+  if (increment < 0.1) increment = 0.1;
 
   let newProgress = user.treeProgress + increment;
   let newLevel = user.level;
+  let additionalCoins = 0;
 
   if (newProgress >= 100) {
     newLevel += 1;
     newProgress = 0;
+
+    additionalCoins =
+      coinAdditionalPerLevel + (newLevel - 1) * coinAdditionalPerLevelIncrease;
   }
 
-  const baseCoins = 10;
-  const coinsPerLevel = 2;
-  const coins = baseCoins + (newLevel - 1) * coinsPerLevel;
+  let coins = coinBaseIncrement - (user.level - 1) * coinBaseDecrementPerLevel;
+
+  if (coins < 0.1) coins = 0.1;
 
   const now = new Date();
 
@@ -93,23 +130,29 @@ export const updateTreeProgress = async (user: User): Promise<User> => {
       treeProgress: newProgress,
       level: newLevel,
       lastWateredAt: now,
-      coins,
+      coins: user.coins + coins + additionalCoins,
     },
   });
 
   const consecutiveDays = calculateConsecutiveDays(updatedUser.lastWateredAt);
 
+  const withdrawals = await prisma.withdrawals.count({
+    where: { userId: user.id },
+  });
+
   const context: AchievementContext = {
-    actionCount: updatedUser.treeProgress,
+    level: updatedUser.level,
+    progress: updatedUser.treeProgress,
+    withdrawals,
     consecutiveDays: consecutiveDays,
   };
 
-  await checkAdnGrantAchievements(user.id, context);
+  await checkAndGrantAchievements(user.id, context);
 
   return updatedUser;
 };
 
-export const getUserAchievements = async (userId: string) => {
+export const getAchievements = async (userId: string) => {
   const userAchievements = await prisma.userAchievements.findMany({
     where: { userId },
     include: {
@@ -171,6 +214,13 @@ const subtractCoins = async (
 };
 
 export const withdrawCoins = async (userId: string): Promise<User> => {
+  const minimumWithdrawal = parseFloat(
+    process.env.NEXT_PUBLIC_MINIMUM_WITHDRAWAL ?? "50.00"
+  );
+  const conversionRate = parseFloat(
+    process.env.NEXT_PUBLIC_CONVERSION_RATE ?? "0.0001"
+  );
+
   const user = await prisma.users.findUnique({
     where: { id: userId },
   });
@@ -180,11 +230,13 @@ export const withdrawCoins = async (userId: string): Promise<User> => {
   }
 
   const coinsToWithdraw = user.coins;
-  if (coinsToWithdraw < 20) {
-    throw new Error("Saldo mínimo de 500 coins necessário para retirada.");
+
+  if (coinsToWithdraw < minimumWithdrawal) {
+    throw new Error(
+      `Saldo mínimo de ${minimumWithdrawal} coins necessário para retirada.`
+    );
   }
 
-  const conversionRate = 0.001;
   const amountInETH = coinsToWithdraw * conversionRate;
 
   try {

@@ -28,6 +28,8 @@ export default function Page() {
   const handleProgressChange = async () => {
     if(!user) return;
 
+    console.log(user);
+
     const updatedUser = await updateTreeProgress(user)
 
     setUser(updatedUser);
@@ -54,7 +56,7 @@ export default function Page() {
           <div className="bg-zinc-600 w-full h-full rounded-lg">
             {activeSection === "home" && 
               <div className="w-full h-full relative ">
-                <RewardCoin coins={user.coins}/>
+                <RewardCoin />
                 <Tree 
                   onProgressChange={handleProgressChange}
                   initialProgress={user.treeProgress}

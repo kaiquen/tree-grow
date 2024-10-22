@@ -13,7 +13,7 @@ export const Ratings = async  () => {
   return (
     <div className="p-2">
       <h1 className="text-center text-zinc-300 mb-4">Classificações globais</h1>
-      <div className="flex flex-col gap-2 overflow-y-auto">
+      <div className="max-h-56 flex flex-col gap-2 overflow-y">
         {users.map((user, index) => (
           <React.Fragment key={user.id}>
             <div className="flex items-top">
